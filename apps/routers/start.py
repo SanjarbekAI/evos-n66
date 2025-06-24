@@ -6,16 +6,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.db_queries.user import get_user
 from apps.filters.is_admin import IsAdmin
 from apps.keyboards.default.admin import admin_main_menu
-from apps.keyboards.default.user import user_main_menu
+from apps.keyboards.default.user import user_main_menu_keyboard
 from apps.keyboards.inline.user import languages
 from apps.states.user import Register
+from loader import _, bot
 
 router = Router()
 
 
 @router.message(Command('start'), IsAdmin())
 async def admin_start_handler(message: types.Message):
-    text = "Assalomu alaykum, admin 🫡"
+    text = _("Assalomu alaykum, admin 🫡")
     await message.answer(text=text, reply_markup=admin_main_menu)
 
 
@@ -28,4 +29,4 @@ async def user_start_handler(message: types.Message, state: FSMContext, session:
         await state.set_state(Register.language)
     else:
         text = "Assalomu alaykum, welcome back"
-        await message.answer(text=text, reply_markup=user_main_menu)
+        await message.answer(text=text, reply_markup=await user_main_menu_keyboard())
