@@ -9,7 +9,7 @@ from apps.keyboards.default.admin import admin_main_menu
 from apps.keyboards.default.user import user_main_menu_keyboard
 from apps.keyboards.inline.user import languages
 from apps.states.user import Register
-from loader import _, bot
+from loader import _
 
 router = Router()
 

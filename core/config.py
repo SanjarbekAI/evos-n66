@@ -13,6 +13,9 @@ DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 
 TOKEN = os.getenv("TOKEN")
+
+BASE_WEBHOOK_URL = os.getenv("BASE_WEBHOOK_URL")
+
 DEVELOPER = 1358470521
 ADMINS = []
 

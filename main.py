@@ -9,8 +9,8 @@ from apps.middlewares.language import LanguageMiddleware
 from apps.middlewares.subscription import SubscribeMiddleware
 from apps.routers import start, register, feedback, backs, user_menu
 from apps.utils.commands import set_my_commands
-from core.config import DEVELOPER
-from loader import dp, i18n, bot
+from core.config import DEVELOPER, BASE_WEBHOOK_URL
+from loader import bot, dp, i18n
 
 # bind localhost only to prevent any external access
 WEB_SERVER_HOST = "127.0.0.1"
@@ -21,13 +21,15 @@ WEB_SERVER_PORT = 8080
 WEBHOOK_PATH = "/webhook"
 # Secret key to validate requests from Telegram (optional)
 WEBHOOK_SECRET = "SECRET"
-# Base URL for webhook will be used to generate webhook URL for Telegram,
-# in this example it is used public DNS with HTTPS support
-BASE_WEBHOOK_URL = "https://offline.uz"
 
 
 async def startup(bot: Bot):
     await set_my_commands(bot)
+    await bot.set_webhook(
+        url=f"{BASE_WEBHOOK_URL}{WEBHOOK_PATH}",
+        secret_token=WEBHOOK_SECRET,
+        drop_pending_updates=True
+    )
     await bot.send_message(text="Bot start to work", chat_id=DEVELOPER)
 
 
