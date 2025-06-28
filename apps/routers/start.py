@@ -28,5 +28,5 @@ async def user_start_handler(message: types.Message, state: FSMContext, session:
         await message.answer(text=text, reply_markup=languages)
         await state.set_state(Register.language)
     else:
-        text = "Assalomu alaykum, welcome back"
+        text = "Assalomu alaykum !"
         await message.answer(text=text, reply_markup=await user_main_menu_keyboard())
