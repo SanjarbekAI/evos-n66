@@ -1,19 +1,26 @@
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
-from aiogram.types import ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardRemove, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.db_queries.category import add_category
+from apps.db_queries.category import add_category, get_category_by_name, delete_category_by_id
 from apps.filters.is_admin import IsAdmin
 from apps.keyboards.default.admin import admin_category_keyboard
-from apps.states.admin import CategoryAdd
+from apps.keyboards.inline.category import admin_category_detail_keyboard, CategoryDetail
+from apps.states.admin import CategoryAdd, AdminMainMenu
 from loader import _
 
 router = Router()
 
 
 @router.message(IsAdmin(), F.text.in_(["Categories 🍴"]))
-async def admin_category_handler(message: types.Message, session: AsyncSession):
+async def admin_category_handler(
+        message: types.Message,
+        state: FSMContext,
+        session: AsyncSession
+):
+    await state.set_state(AdminMainMenu.category)
+
     text = "Category menu"
     await message.answer(
         text=text,
@@ -22,7 +29,7 @@ async def admin_category_handler(message: types.Message, session: AsyncSession):
         ))
 
 
-@router.message(IsAdmin(), F.text.in_(["Add category 🍴"]))
+@router.message(IsAdmin(), AdminMainMenu.category, F.text.in_(["Add category 🍴"]))
 async def add_category_handler(message: types.Message, state: FSMContext):
     text = _("Enter name in uzbek")
     await message.answer(text=text, reply_markup=ReplyKeyboardRemove())
@@ -62,4 +69,45 @@ async def add_category_handler(
         text=text, reply_markup=await admin_category_keyboard(
             session=session, chat_id=message.chat.id
         ))
-    await state.clear()
+    await state.set_state(AdminMainMenu.category)
+
+
+@router.callback_query(IsAdmin(), AdminMainMenu.category, CategoryDetail.filter(F.act == "delete_category"))
+async def admin_category_detail_handler(
+        call: CallbackQuery,
+        callback_data: CategoryDetail,
+        session: AsyncSession
+
+):
+    if await delete_category_by_id(
+            session=session,
+            category_id=callback_data.category_id
+    ):
+        await call.answer(text="Category is deleted ✅")
+        await call.message.delete()
+        text = "Category menu"
+        await call.message.answer(
+            text=text,
+            reply_markup=await admin_category_keyboard(
+                session=session, chat_id=call.message.chat.id
+            ))
+    else:
+        await call.answer(text="Something went wrong ❌")
+
+
+@router.message(IsAdmin(), AdminMainMenu.category)
+async def accept_all_messages_category_handler(
+        message: types.Message,
+        session: AsyncSession
+):
+    category = await get_category_by_name(session=session, name=message.text)
+    if category:
+        text = f"""
+Uzbek: {category.name['uz']}
+Russian: {category.name['ru']}
+English: {category.name['en']}
+"""
+        await message.answer(text=text,
+                             reply_markup=await admin_category_detail_keyboard(
+                                 category=category
+                             ))
